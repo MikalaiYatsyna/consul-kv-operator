@@ -32,7 +32,7 @@ kubectl get pods
 ## **Usage**
 Create and apply yaml with content
 ```yaml
-apiVersion: consulextensions.logistic.com/v1
+apiVersion: extensions.logistic.com/v1
 kind: ConsulKv
 metadata:
     name: user-service-config
@@ -41,7 +41,8 @@ metadata:
 spec:
   host: consul-server
   path: {{.Release.Namespace}}/config/{{.Chart.Name}}/data
-  data: |
+  valueType: ["KV", "YAML", "PROPERTIES"] # one of values
+  value:
     spring:
         application:
             name: user-service

@@ -14,13 +14,10 @@ permissions:
 
 jobs:
   build:
-  runs-on: ubuntu-latest
-  steps:
+    runs-on: ubuntu-latest
+    steps:
     - name: Checkout
       uses: actions/checkout@v3
-
-    - name: Set up Packer
-      uses: hashicorp/packer-github-actions@master
 
     - name: Setup helm
       uses: azure/setup-helm@v3
@@ -43,29 +40,23 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
 
+    - name: Packer init
+      run: packer init .
+      env:
+          PACKER_LOG: 1
 
-    - name: Build docker image
-      uses: hashicorp/packer-github-actions@master
-      with:
-        command: validate
-        arguments: -var image_tag=${{ steps.version.outputs.version }}
-        target: packer.pkr.hcl
-        working_directory: .
+    - name: Packer validate
+      run: packer validate -var image_tag=${{ steps.version.outputs.version }} .
       env:
         PACKER_LOG: 1
 
     - name: Build docker image
-      uses: hashicorp/packer-github-actions@master
-      with:
-        command: build
-        arguments: -var image_tag=${{ steps.version.outputs.version }}
-        target: packer.pkr.hcl
-        working_directory: .
+      run: packer build -var image_tag=${{ steps.version.outputs.version }} .
       env:
         PACKER_LOG: 1
 
     - name: Update Helm chart version
-      run: yq -i '.version = "${{ steps.version.outputs.version }}"' ./ci/helm/Chart.yaml
+      run: yq -i '.version = "${{ steps.version.outputs.version }}"' ./helm/Chart.yaml
 
     - name: Helm Lint
       run: helm lint ./helm
@@ -74,6 +65,6 @@ jobs:
       run: helm template ./helm
 
     - name: Save chart
-      run: helm chart save ./ci/helm ${{ github.repository }}:${{ steps.version.outputs.version }}
+      run: helm chart save ./helm ${{ github.repository }}:${{ steps.version.outputs.version }}
       env:
           HELM_EXPERIMENTAL_OCI: 1
