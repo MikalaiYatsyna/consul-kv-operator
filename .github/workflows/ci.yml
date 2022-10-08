@@ -41,28 +41,17 @@ jobs:
           REF: ${{ github.ref }}
 
     - name: Packer init
-      uses: hashicorp/packer-github-actions@master
-      with:
-          command: init
-          working_directory: .
+      run: packer init .
       env:
           PACKER_LOG: 1
 
     - name: Packer validate
-      uses: hashicorp/packer-github-actions@master
-      with:
-        command: validate
-        arguments: -var image_tag=${{ steps.version.outputs.version }}
-        working_directory: .
+      run: packer validate -var image_tag=${{ steps.version.outputs.version }} .
       env:
         PACKER_LOG: 1
 
     - name: Build docker image
-      uses: hashicorp/packer-github-actions@master
-      with:
-        command: build
-        arguments: -var image_tag=${{ steps.version.outputs.version }}
-        working_directory: .
+      run: packer build -var image_tag=${{ steps.version.outputs.version }} .
       env:
         PACKER_LOG: 1
 
