@@ -46,7 +46,6 @@ jobs:
       with:
         command: validate
         arguments: -var image_tag=${{ steps.version.outputs.version }}
-        target: packer.pkr.hcl
         working_directory: .
       env:
         PACKER_LOG: 1
