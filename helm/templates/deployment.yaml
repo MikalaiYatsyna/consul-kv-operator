@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    operator: {{ .Chart.Name }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      operator: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        operator: {{ .Chart.Name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceaccount.name }}
+      containers:
+        - name: {{ .Chart.Name}}
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          imagePullPolicy: IfNotPresent
