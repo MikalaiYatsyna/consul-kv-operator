@@ -40,8 +40,15 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
 
+    - name: Packer init
+      uses: hashicorp/packer-github-actions@master
+      with:
+          command: init
+          working_directory: .
+      env:
+          PACKER_LOG: 1
 
-    - name: Build docker image
+    - name: Packer build image
       uses: hashicorp/packer-github-actions@master
       with:
         command: validate
