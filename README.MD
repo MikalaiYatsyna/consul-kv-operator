@@ -46,10 +46,3 @@ spec:
         application:
             name: user-service
 ```
-
-
-packer build -var image_tag=1.0.0 .
-
-helm install consul-kv-crd ./helm --set image.tag=1.0.0
-
-k apply -f example.yaml
