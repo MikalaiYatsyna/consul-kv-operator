@@ -1,0 +1,5 @@
+apiVersion: v2
+name: consul-kv-controller
+description: A Helm chart for Consul KV CRD
+type: application
+version: 1.0.0
