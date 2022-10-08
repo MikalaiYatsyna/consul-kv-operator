@@ -48,7 +48,7 @@ jobs:
       env:
           PACKER_LOG: 1
 
-    - name: Packer build image
+    - name: Packer validate
       uses: hashicorp/packer-github-actions@master
       with:
         command: validate
@@ -62,7 +62,6 @@ jobs:
       with:
         command: build
         arguments: -var image_tag=${{ steps.version.outputs.version }}
-        target: packer.pkr.hcl
         working_directory: .
       env:
         PACKER_LOG: 1
