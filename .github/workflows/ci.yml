@@ -1,70 +1,46 @@
 name: Build Docker image and Helm Chart
 
 on:
-    push:
-        branches: [ "master" ]
-    pull_request:
-        branches: [ "master" ]
-    workflow_run:
-        workflows:
-            - Build
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "*" ]
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Setup helm
-      uses: azure/setup-helm@v3
-      with:
+      - name: Setup helm
+        uses: azure/setup-helm@v3
+        with:
           version: v3.5.0
 
-    - name: Init version
-      id: version
-      run: |
-          if [ "$EVENT" == 'pull_request' ]
-          then
-            echo "::set-output name=version::$(echo 1.0.0-${{github.event.pull_request.head.sha}} | cut -c1-13)"
-          elif [ "$EVENT" == 'workflow_run' ]
-          then
-            echo "::set-output name=version::$(echo 1.0.0-${{github.event.workflow_run.head_sha}} | cut -c1-13)"
-          else
-            echo "::set-output name=version::$(echo 1.0.0-$GITHUB_SHA | cut -c1-13 )"
-          fi
-      env:
-          EVENT: ${{ github.event_name }}
-          REF: ${{ github.ref }}
-
-    - name: Packer init
-      run: packer init .
-      env:
+      - name: Packer init
+        run: packer init .
+        env:
           PACKER_LOG: 1
 
-    - name: Packer validate
-      run: packer validate -var image_tag=${{ steps.version.outputs.version }} .
-      env:
-        PACKER_LOG: 1
+      - name: Packer validate
+        run: packer validate -syntax-only packer.pkr.hcl
+        env:
+          PACKER_LOG: 1
 
-    - name: Build docker image
-      run: packer build -var image_tag=${{ steps.version.outputs.version }} .
-      env:
-        PACKER_LOG: 1
+      - name: Build docker image
+        run: packer build -var image_tag=1.0.0-ci -except=docker-push .
+        env:
+          PACKER_LOG: 1
+          PKR_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          PKR_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PKR_VAR_ecr_url: ${{ secrets.AWS_ECR_URL }}
 
-    - name: Update Helm chart version
-      run: yq -i '.version = "${{ steps.version.outputs.version }}"' ./helm/Chart.yaml
+      - name: Helm Lint
+        run: helm lint ./helm
 
-    - name: Helm Lint
-      run: helm lint ./helm
-
-    - name: Helm template
-      run: helm template ./helm
-
-    - name: Save chart
-      run: helm chart save ./helm ${{ github.repository }}:${{ steps.version.outputs.version }}
-      env:
-          HELM_EXPERIMENTAL_OCI: 1
+      - name: Helm template
+        run: helm template ./helm

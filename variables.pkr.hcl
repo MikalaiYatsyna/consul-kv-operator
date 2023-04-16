@@ -3,11 +3,10 @@ variable "python_image" {
   default = "python:slim"
 }
 
-variable "image_name" {
-  type    = string
-  default = "consul-kv-operator"
+variable "image_tag" {
+  type = string
 }
 
-variable "image_tag" {
+variable "ecr_url" {
   type = string
 }

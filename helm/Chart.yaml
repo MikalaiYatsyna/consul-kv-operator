@@ -1,5 +1,6 @@
 apiVersion: v2
-name: consul-kv-controller
-description: A Helm chart for Consul KV CRD
+name: consul-kv-operator-helm
+description: A Helm chart for Consul KV Operator
 type: application
 version: 1.0.0
+appVersion: 1.0.0
