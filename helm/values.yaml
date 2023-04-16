@@ -1,14 +1,13 @@
-image:
-  name: consul-kv-operator
-  tag: latest
+crd:
+  group: extensions.logisticsonline.uk
+  kind: ConsulKV
+  version: v1
+  scope: Cluster
+  singularName: ckv
+  pluralName: ckvs
 
-serviceaccount:
-    name: consul-kv-operator-service-account
+serviceAccount:
+  name: consul-kv-operator-service-account
 
 role:
   name: consul-kv-operator-role
-
-# Keep in sync with consul-kv-operator.py
-crd:
-  group: extensions.logistic.com
-  pluralName: ckvs

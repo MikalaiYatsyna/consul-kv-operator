@@ -1,0 +1,68 @@
+name: Release new version
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and publish image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "latest"
+
+      - name: Init version
+        id: version
+        run: echo "::set-output name=version::$(echo ${GITHUB_REF#refs/tags/})"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1" # The only supported region for public ECR
+
+      - name: Packer init
+        run: packer init ./packer.pkr.hcl
+        env:
+          PACKER_LOG: 1
+
+      - name: Packer validate
+        run: packer validate -syntax-only packer.pkr.hcl
+        env:
+          PACKER_LOG: 1
+
+      - name: Build docker image
+        run: packer build -var image_tag=${{ steps.version.outputs.version }} .
+        env:
+          PACKER_LOG: 1
+          PKR_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          PKR_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PKR_VAR_ecr_url: ${{ secrets.AWS_ECR_URL }}
+
+      - name: Helm Lint
+        run: helm lint ./helm
+
+      - name: Helm template
+        run: helm template ./helm
+
+      - name: Save chart
+        run: helm package helm --version ${{ steps.version.outputs.version }} --app-version ${{ steps.version.outputs.version }}
+        env:
+          HELM_EXPERIMENTAL_OCI: 1
+
+      - name: Log in to Helm Registry
+        run: aws ecr-public get-login-password | helm registry login --username AWS --password-stdin ${{ secrets.AWS_CHART_ECR_URL }}
+
+      - name: Push chart to registry
+        run: helm push consul-kv-operator-helm-${{ steps.version.outputs.version }}.tgz oci://${{ secrets.AWS_CHART_ECR_URL }}

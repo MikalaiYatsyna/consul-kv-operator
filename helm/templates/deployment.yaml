@@ -2,8 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Chart.Name }}
+  namespace: {{.Release.Namespace}}
   labels:
     operator: {{ .Chart.Name }}
+    app: {{ .Chart.Name }}
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.Version | quote }}
 spec:
   replicas: 1
   strategy:
@@ -16,8 +24,15 @@ spec:
       labels:
         operator: {{ .Chart.Name }}
     spec:
-      serviceAccountName: {{ .Values.serviceaccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
         - name: {{ .Chart.Name}}
-          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          image: {{ .Chart.Name }}:{{ .Chart.AppVersion }}
           imagePullPolicy: IfNotPresent
+          env:
+            - name: GROUP
+              value: {{ .Values.crd.group }}
+            - name: NAME
+              value: {{ .Values.crd.singularName }}
+            - name: VERSION
+              value: {{ .Values.crd.version }}

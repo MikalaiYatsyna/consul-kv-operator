@@ -41,3 +41,7 @@ gradlew.bat
 **.lock
 
 crd.yaml
+**/bin/
+**/include/
+**/lib/
+**/pyvenv.cfg
